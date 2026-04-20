@@ -1,0 +1,15 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../dbserver');
+const Door = require('./Door');
+
+const Storage = sequelize.define('Storage', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    productId: { 
+        type: DataTypes.INTEGER, 
+        defaultValue: 1, 
+        references: { model: Door, key: 'id' }
+    },
+    storageName: DataTypes.STRING, 
+});
+
+module.exports = Storage;
