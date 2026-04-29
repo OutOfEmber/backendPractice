@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const doorController = require('../controllers/doorContorller.js'); 
+const doorController = require('../controllers/doorController.js'); 
 
 router.get('/', doorController.getAll);
 router.get('/:id', doorController.getOne);

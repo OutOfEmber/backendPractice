@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/orderController.js');
+const controller = require('../controllers/storageController.js');
 
 router.get('/', controller.getAll);
 router.get('/:id', controller.getOne);

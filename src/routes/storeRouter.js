@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/orderController.js');
+// Импортируем контроллер магазина
+const controller = require('../controllers/storeController.js');
 
 router.get('/', controller.getAll);
 router.get('/:id', controller.getOne);

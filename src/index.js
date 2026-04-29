@@ -8,8 +8,12 @@ const Store = require('./database/models/Store.js');
 const Order = require('./database/models/Order.js');
 const Customer = require('./database/models/Customer.js');
 
-const doorRouter = require('./routes/doorRouter.js');
+const customerRouter = require('./routes/customerRouter.js');
+const doorVarRouter = require('./routes/doorVarRouter.js');
+const storageRouter = require('./routes/storageRouter.js');
+const storeRouter = require('./routes/storeRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
+const doorRouter = require('./routes/doorRouter.js');
 
 const app = express();
 app.use(express.json());
@@ -22,9 +26,23 @@ Storage.belongsTo(Door, { foreignKey: 'productId' });
 
 app.use('/doors', doorRouter); 
 app.use('/orders', orderRouter);
+app.use('/customers', customerRouter);
+app.use('/variants', doorVarRouter);
+app.use('/storage', storageRouter);
+app.use('/stores', storeRouter);
 
+async function checkInitDB() {
+    try {
+        await sequelize.authenticate();
+        console.log('Соединение с базой данных успешно установлено.');
+    } catch (e) {
+        console.error('Невозможно подключиться к базе данных:', e);
+        process.exit(1);
+    }
+}
 async function start() {
     try {
+        await checkInitDB();
         await sequelize.sync({ force: false }); 
         console.log("База данных успешно синхронизирована");
         app.listen(3000, () => console.log('Сервер запущен на порта 3000'));

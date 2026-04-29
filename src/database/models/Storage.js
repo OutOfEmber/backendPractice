@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../dbserver');
-const Door = require('./Door');
+const sequelize = require('../dbserver.js');
+const Door = require('./Door.js');
 
 const Storage = sequelize.define('Storage', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
