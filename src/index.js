@@ -14,6 +14,7 @@ const storageRouter = require('./routes/storageRouter.js');
 const storeRouter = require('./routes/storeRouter.js');
 const orderRouter = require('./routes/orderRouter.js');
 const doorRouter = require('./routes/doorRouter.js');
+const authRouter = require('./routes/authRouter.js');
 
 const app = express();
 app.use(express.json());
@@ -30,6 +31,7 @@ app.use('/customers', customerRouter);
 app.use('/variants', doorVarRouter);
 app.use('/storage', storageRouter);
 app.use('/stores', storeRouter);
+app.use('/auth', authRouter);
 
 async function checkInitDB() {
     try {
@@ -45,7 +47,7 @@ async function start() {
         await checkInitDB();
         await sequelize.sync({ force: false }); 
         console.log("База данных успешно синхронизирована");
-        app.listen(3000, () => console.log('Сервер запущен на порта 3000'));
+        app.listen(3000, () => console.log('Сервер запущен на порте 3000'));
     } catch (e) {
         console.error("Ошибка запуска:", e);
     }
