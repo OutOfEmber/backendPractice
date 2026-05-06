@@ -1,5 +1,6 @@
 const express = require('express');
 const sequelize = require('./database/dbserver.js'); 
+const cors=require('cors')
 
 const Door = require('./database/models/Door.js');
 const DoorVariant = require('./database/models/DoorVariant.js');
@@ -17,6 +18,7 @@ const doorRouter = require('./routes/doorRouter.js');
 const authRouter = require('./routes/authRouter.js');
 
 const app = express();
+app.use(cors())
 app.use(express.json());
 
 Door.hasMany(DoorVariant, { foreignKey: 'doorId' });
@@ -31,7 +33,7 @@ app.use('/customers', customerRouter);
 app.use('/variants', doorVarRouter);
 app.use('/storage', storageRouter);
 app.use('/stores', storeRouter);
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 
 async function checkInitDB() {
     try {
