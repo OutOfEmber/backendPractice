@@ -12,8 +12,11 @@ window.onload = () => {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
         const statusElem = document.getElementById('authStatus');
         const logoutBtn = document.getElementById('logoutBtn');
+        // const post = document.getElementById('post');
+        // const put = document.getElementById('put');
+        // const del = document.getElementById('delete');
         if (statusElem) {
-            statusElem.textContent = 'Статус: Авторизован (сессия восстановлена)';
+            statusElem.textContent = 'Статус: Авторизован';
             statusElem.style.color = 'green';
         }
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
@@ -58,59 +61,7 @@ function logout() {
     location.reload();
 }
 
-let currentEntity = 'doors'; // По умолчанию
-
-function updateCurrentTable() {
-    currentEntity = document.getElementById('tableSelect').value;
-    console.log("Сейчас работаем с:", currentEntity);
-    // Очищаем старые данные при переключении
-    document.getElementById('tableHead').innerHTML = '';
-    document.getElementById('tableBody').innerHTML = '';
-}
-
-// Универсальная функция для отрисовки таблицы
-function renderTable(data) {
-    const head = document.getElementById('tableHead');
-    const body = document.getElementById('tableBody');
-    const table = document.getElementById('dataTable');
-
-    head.innerHTML = '';
-    body.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        output.textContent = "Данные отсутствуют";
-        table.style.display = 'none';
-        return;
-    }
-
-    table.style.display = 'table';
-    output.textContent = ''; // Скрываем JSON-текст
-
-    // 1. Создаем заголовки на основе ключей первого объекта
-    const keys = Object.keys(data[0]);
-    let thr = document.createElement('tr');
-    keys.forEach(key => {
-        let th = document.createElement('th');
-        th.textContent = key.toUpperCase();
-        th.style.background = '#eee';
-        thr.appendChild(th);
-    });
-    head.appendChild(thr);
-
-    // 2. Наполняем строками
-    data.forEach(item => {
-        let tr = document.createElement('tr');
-        keys.forEach(key => {
-            let td = document.createElement('td');
-            td.textContent = item[key];
-            td.style.padding = '5px';
-            tr.appendChild(td);
-        });
-        body.appendChild(tr);
-    });
-}
-
-async function fetchAllDoors() {
+async function displayAllDoors() {
     try {
         const response = await apiClient.get('/doors');
         output.textContent = JSON.stringify(response.data, null, 2);
@@ -130,7 +81,7 @@ async function createDoor() {
     try {
         const response = await apiClient.post('/doors', { doorName: name });
         output.textContent = 'Создано: ' + JSON.stringify(response.data, null, 2);
-        fetchAllDoors();
+        displayAllDoors();
     } catch (error) {
         output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
     }
@@ -142,7 +93,7 @@ async function updateDoor() {
     try {
         const response = await apiClient.put(`/doors/${id}`, { doorName: name });
         output.textContent = 'Обновлено: ' + JSON.stringify(response.data, null, 2);
-        fetchAllDoors();
+        displayAllDoors();
     } catch (error) {
         output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
     }
@@ -153,10 +104,10 @@ async function deleteDoor() {
     try {
         await apiClient.delete(`/doors/${id}`);
         output.textContent = 'Удалено успешно';
-        fetchAllDoors();
+        displayAllDoors();
     } catch (error) {
         if (error.response?.status === 403) {
-            output.textContent = 'Ошибка: Только для ADMIN';
+            output.textContent = 'Ошибка: Нужен ADMIN';
         } else {
             output.textContent = 'Ошибка при удалении';
         }
