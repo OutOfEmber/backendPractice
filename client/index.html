@@ -12,7 +12,9 @@
         <input type="text" id="itemName" placeholder="Название (для post/put)">
         <button onclick="fetchAllDoors()">Get All</button>
         <button onclick="createDoor()">Post (Create)</button>
+        <button onclick="updateDoor()">Put</button>
         <button onclick="deleteDoor()">Delete</button>
+
     </div>
 
     <div id="output" style="margin-top: 20px; white-space: pre; background: #f0f0f0; padding: 10px;">
@@ -21,13 +23,14 @@
     <hr>
     <h2>Авторизация и Регистрация</h2>
     <div id="auth-form">
-        <input type="login" id="authLogin" placeholder="Логин">
-        <input type="password" id="authPassword" placeholder="Пароль">
-        <br><br>
-        <button onclick="register()">Зарегистрироваться</button>
-        <button onclick="login()">Войти</button>
-        <p id="authStatus">Статус: Не авторизован</p>
-    </div>
+    <input type="login" id="authLogin" placeholder="Логин">
+    <input type="password" id="authPassword" placeholder="Пароль">
+    <br><br>
+    <button onclick="register()">Зарегистрироваться</button>
+    <button onclick="login()">Войти</button>
+    <button id="logoutBtn" onclick="logout()" style="display: none;">Выйти</button> 
+    <p id="authStatus">Статус: Не авторизован</p>
+</div>
     <script src="api.js"></script>
 </body>
 </html>

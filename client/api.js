@@ -6,34 +6,56 @@ const apiClient = axios.create({
 
 const output = document.getElementById('output');
 
+window.onload = () => {
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+        const statusElem = document.getElementById('authStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (statusElem) {
+            statusElem.textContent = 'Статус: Авторизован (сессия восстановлена)';
+            statusElem.style.color = 'green';
+        }
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    }
+};
+
 async function register() {
-    const login = document.getElementById('authLogin').value;
+    const loginValue = document.getElementById('authLogin').value;
     const password = document.getElementById('authPassword').value;
-    
+    let role = (password === '123') ? 'ADMIN' : 'USER';
+
     try {
-        const response = await apiClient.post('/auth/register', { login, password });
-        alert('Регистрация успешна!');
-        console.log(response.data);
+        await apiClient.post('/auth/register', { login: loginValue, password, role });
+        alert(`Регистрация успешна! Роль: ${role}`);
     } catch (error) {
-        alert('Ошибка регистрации: ' + error.response.data.message);
+        alert(error.response?.data?.message || "Ошибка регистрации");
     }
 }
 
 async function login() {
-    const login = document.getElementById('authLogin').value;
+    const loginValue = document.getElementById('authLogin').value;
     const password = document.getElementById('authPassword').value;
-    
     try {
-        const response = await apiClient.post('/auth/login', { email, password });
+        const response = await apiClient.post('/auth/login', { login: loginValue, password });
         const token = response.data.token;
+        
         localStorage.setItem('token', token);
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
-        alert('Вы вошли в систему!');
         document.getElementById('authStatus').textContent = 'Статус: Авторизован';
+        document.getElementById('authStatus').style.color = 'green';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
     } catch (error) {
-        alert('Ошибка входа: ' + error.response.data.message);
+        alert('Ошибка входа: ' + (error.response?.data?.message || 'Неизвестная ошибка'));
     }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    delete apiClient.defaults.headers.common['Authorization'];
+    alert('Вы вышли из системы');
+    location.reload();
 }
 
 async function fetchAllDoors() {
@@ -44,21 +66,29 @@ async function fetchAllDoors() {
         output.textContent = 'Ошибка: ' + error.message;
     }
 }
+
 async function createDoor() {
     const name = document.getElementById('itemName').value;
     try {
-        const response = await apiClient.post('/doors', { name: name });
+        const response = await apiClient.post('/doors', { doorName: name });
         output.textContent = 'Создано: ' + JSON.stringify(response.data, null, 2);
+        fetchAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка при создании';
+        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
     }
 }
+
 async function deleteDoor() {
     const id = document.getElementById('itemId').value;
     try {
-        const response = await apiClient.delete(`/doors/${id}`);
+        await apiClient.delete(`/doors/${id}`);
         output.textContent = 'Удалено успешно';
+        fetchAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка при удалении';
+        if (error.response?.status === 403) {
+            output.textContent = 'Ошибка: Только для ADMIN';
+        } else {
+            output.textContent = 'Ошибка при удалении';
+        }
     }
 }
