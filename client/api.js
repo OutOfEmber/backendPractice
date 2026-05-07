@@ -58,12 +58,70 @@ function logout() {
     location.reload();
 }
 
+let currentEntity = 'doors'; // По умолчанию
+
+function updateCurrentTable() {
+    currentEntity = document.getElementById('tableSelect').value;
+    console.log("Сейчас работаем с:", currentEntity);
+    // Очищаем старые данные при переключении
+    document.getElementById('tableHead').innerHTML = '';
+    document.getElementById('tableBody').innerHTML = '';
+}
+
+// Универсальная функция для отрисовки таблицы
+function renderTable(data) {
+    const head = document.getElementById('tableHead');
+    const body = document.getElementById('tableBody');
+    const table = document.getElementById('dataTable');
+
+    head.innerHTML = '';
+    body.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        output.textContent = "Данные отсутствуют";
+        table.style.display = 'none';
+        return;
+    }
+
+    table.style.display = 'table';
+    output.textContent = ''; // Скрываем JSON-текст
+
+    // 1. Создаем заголовки на основе ключей первого объекта
+    const keys = Object.keys(data[0]);
+    let thr = document.createElement('tr');
+    keys.forEach(key => {
+        let th = document.createElement('th');
+        th.textContent = key.toUpperCase();
+        th.style.background = '#eee';
+        thr.appendChild(th);
+    });
+    head.appendChild(thr);
+
+    // 2. Наполняем строками
+    data.forEach(item => {
+        let tr = document.createElement('tr');
+        keys.forEach(key => {
+            let td = document.createElement('td');
+            td.textContent = item[key];
+            td.style.padding = '5px';
+            tr.appendChild(td);
+        });
+        body.appendChild(tr);
+    });
+}
+
 async function fetchAllDoors() {
     try {
         const response = await apiClient.get('/doors');
         output.textContent = JSON.stringify(response.data, null, 2);
+        output.style.color = 'black';
     } catch (error) {
-        output.textContent = 'Ошибка: ' + error.message;
+        if (error.response?.status === 401) {
+            output.textContent = 'Ошибка: Пожалуйста, войдите в систему, чтобы увидеть данные.';
+            output.style.color = 'red';
+        } else {
+            output.textContent = 'Ошибка: ' + error.message;
+        }
     }
 }
 
@@ -72,6 +130,18 @@ async function createDoor() {
     try {
         const response = await apiClient.post('/doors', { doorName: name });
         output.textContent = 'Создано: ' + JSON.stringify(response.data, null, 2);
+        fetchAllDoors();
+    } catch (error) {
+        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
+    }
+}
+
+async function updateDoor() {
+    const name = document.getElementById('itemName').value;
+    const id = document.getElementById('itemId').value;
+    try {
+        const response = await apiClient.put(`/doors/${id}`, { doorName: name });
+        output.textContent = 'Обновлено: ' + JSON.stringify(response.data, null, 2);
         fetchAllDoors();
     } catch (error) {
         output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');

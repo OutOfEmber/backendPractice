@@ -3,7 +3,7 @@ const router = express.Router();
 const doorController = require('../controllers/doorController.js'); 
 const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware.js');
 
-router.get('/', doorController.getAll);
+router.get('/',authMiddleware, doorController.getAll);
 router.get('/:id', doorController.getOne);
 router.post('/', authMiddleware, adminMiddleware, doorController.create);
 router.put('/:id', authMiddleware, adminMiddleware, doorController.update);
