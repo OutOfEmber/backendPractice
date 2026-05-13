@@ -12,12 +12,16 @@ window.onload = () => {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
         const statusElem = document.getElementById('authStatus');
         const logoutBtn = document.getElementById('logoutBtn');
+        const main = document.getElementById('main-content');
+        const auth = document.getElementById('auth-form');
         // const post = document.getElementById('post');
         // const put = document.getElementById('put');
         // const del = document.getElementById('delete');
         if (statusElem) {
             statusElem.textContent = 'Статус: Авторизован';
             statusElem.style.color = 'green';
+            main.style.display = 'block';
+            auth.style.display = 'none';
         }
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
     }
@@ -39,16 +43,19 @@ async function register() {
 async function login() {
     const loginValue = document.getElementById('authLogin').value;
     const password = document.getElementById('authPassword').value;
+    const main = document.getElementById('main-content');
+    const auth = document.getElementById('auth-form');
     try {
         const response = await apiClient.post('/auth/login', { login: loginValue, password });
         const token = response.data.token;
         
         localStorage.setItem('token', token);
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
         document.getElementById('authStatus').textContent = 'Статус: Авторизован';
         document.getElementById('authStatus').style.color = 'green';
         document.getElementById('logoutBtn').style.display = 'inline-block';
+        main.style.display = 'block';
+        auth.style.display = 'none';
     } catch (error) {
         alert('Ошибка входа: ' + (error.response?.data?.message || 'Неизвестная ошибка'));
     }
@@ -73,6 +80,26 @@ async function displayAllDoors() {
         } else {
             output.textContent = 'Ошибка: ' + error.message;
         }
+    }
+}
+
+async function renderCatalog() {
+    const container = document.getElementById('catalog-container');
+    try{
+        const response = await apiClient.get('/doors');
+        const doors = response.data;
+        container.innerHTML = '';
+        doors.forEach(door => {
+            const card = document.createElement('div');
+            card.innerHTML = `
+            <h3>${door.doorName}</h3>
+            <p>ID: ${door.id}</p>
+            <button onclick="addToCart(${door.id})">Добавить в корзину</button>
+            `
+            container.appendChild(card)
+        });
+    } catch (error){
+        container.innerHTML = "Ошибка загрузки каталога"
     }
 }
 

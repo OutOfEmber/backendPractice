@@ -2,35 +2,37 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Управление дверями</title>
+    <title>Главная страница</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
+    <header>
+        <div class="logo">DOORS</div>
+        <a href="./catalog.html">Каталог</a>
+    </header>
+    <div id="main-content" style="display: none">
     <h1>API Client</h1>
-    <div>
         <input type="text" id="itemId" placeholder="ID">
         <input type="text" id="itemName" placeholder="Название">
         <button onclick="displayAllDoors()">Get All</button>
         <button id='post' onclick="createDoor()">Post (Create)</button>
         <button id='put'onclick="updateDoor()">Put</button>
         <button id='delete'onclick="deleteDoor()">Delete</button>
-
-    </div>
-
     <div id="output" style="margin-top: 20px; white-space: pre; background: #f0f0f0; padding: 10px;">
         Здесь будет ответ сервера...
     </div>
+    </div>
     <hr>
-        <h2>Авторизация и Регистрация</h2>
     <div id="auth-form">
+        <h2>Авторизация и Регистрация</h2>
         <input type="login" id="authLogin" placeholder="Логин">
         <input type="password" id="authPassword" placeholder="Пароль">
      <br><br>
         <button onclick="register()">Зарегистрироваться</button>
         <button onclick="login()">Войти</button>
-        <button id="logoutBtn" onclick="logout()" style="display: none;">Выйти</button> 
         <p id="authStatus">Статус: Не авторизован</p>
     </div>
+    <button id="logoutBtn" onclick="logout()" style="display: none;">Выйти</button> 
     <script src="api.js"></script>
 </body>
 </html>
