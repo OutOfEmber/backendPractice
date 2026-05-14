@@ -2,19 +2,39 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Админка</title>
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="admin.html">Админка</a>
+    </nav>
+    <div class="container">
+        <h1>Управление товарами</h1>
+        <div style="max-width: 500px; margin: 0 auto 30px auto;">
+            <input type="text" id="itemId" placeholder="ID (для удаления/обновления)">
+            <input type="text" id="itemName" placeholder="Название двери">
+            <button class="btn-blue" onclick="createDoor()">Создать товар</button>
+            <button class="btn-blue" style="background: #f39c12;" onclick="updateDoor()">Обновить товар</button>
+            <button class="btn-red" onclick="deleteDoor()">Удалить товар</button>
+        </div>
+        <h3>Список в БД (JSON):</h3>
+        <div id="output">Нажмите "Обновить список" для просмотра...</div>
+        <button class="btn-blue" onclick="displayAllDoors()" style="margin-top: 10px;">Обновить список</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("Доступ только для авторизованных!");
+                location.href = 'login.html';
+            }
+            checkAuth();
+        };
+    </script>
 </body>
-<script>
-    window.onload = () =>{
-        const token = localStorage.getItem("token");
-        if(!token){
-            alert("Доступ запрещен");
-            window.location.href = 'login.html'
-            return;
-        }
-    }
-</script>
 </html>

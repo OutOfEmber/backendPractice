@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои заказы - DoorStore</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav id="navbar">
+        <a href="index.html">Главная</a>
+        <a href="catalog.html">Каталог</a>
+        <a href="orders.html">Мои заказы</a>
+        <a href="cart.html">Корзина</a>
+        <a href="login.html" id="authLink">Вход</a>
+    </nav>
+
+    <div class="container">
+        <h1>История ваших заказов</h1>
+        <p style="text-align: center; color: #666;">Здесь отображаются ваши текущие и завершенные заявки.</p>
+        
+        <div id="orders-list" class="grid">
+            </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("Эта страница доступна только авторизованным пользователям!");
+                location.href = 'login.html';
+                return;
+            }
+            checkAuth();
+            renderOrders();
+        };
+    </script>
+</body>
+</html>

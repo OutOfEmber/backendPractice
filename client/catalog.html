@@ -3,13 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Каталог дверей</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="logo">DOORS</div>
-        <a href="./index.html">Главная</a>
-    </header>
-    <div id="catalog-container" class="grid-container">
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="catalog.html">Каталог</a>
+        <a href="cart.html">Корзина</a>
+    </nav>
+    <div class="container">
+        <h1>Наш ассортимент</h1>
+        <div id="catalog-grid" class="grid"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        window.onload = () => {
+            checkAuth();
+            renderCatalog();
+        };
+    </script>
 </body>
 </html>

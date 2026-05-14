@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav><a href="index.html">← На главную</a></nav>
+    <div class="container" style="max-width: 400px;">
+        <h2>Авторизация</h2>
+        <input type="text" id="authLogin" placeholder="Логин">
+        <input type="password" id="authPassword" placeholder="Пароль">
+        <button class="btn-blue" onclick="login()">Войти</button>
+        <button style="background: #2ecc71; color: white;" onclick="register()">Регистрация</button>
+        <p id="authStatus" style="text-align: center; margin-top: 15px;">Статус: Не авторизован</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="api.js"></script>
+</body>
+</html>

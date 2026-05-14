@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="catalog.html">Каталог</a>
+        <a href="cart.html">Корзина</a>
+    </nav>
+    <div class="container">
+        <h1>Ваша корзина</h1>
+        <div id="cart-items" class="grid"></div>
+        <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; text-align: right;">
+            <button class="btn-blue" style="width: 200px;" onclick="alert('Заказ оформлен!')">Оформить заказ</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        window.onload = () => {
+            checkAuth();
+            renderCart();
+        };
+    </script>
+</body>
+</html>

@@ -6,137 +6,213 @@ const apiClient = axios.create({
 
 const output = document.getElementById('output');
 
-window.onload = () => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-        const statusElem = document.getElementById('authStatus');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const main = document.getElementById('main-content');
-        const auth = document.getElementById('auth-form');
-        // const post = document.getElementById('post');
-        // const put = document.getElementById('put');
-        // const del = document.getElementById('delete');
-        if (statusElem) {
-            statusElem.textContent = 'Статус: Авторизован';
-            statusElem.style.color = 'green';
-            main.style.display = 'block';
-            auth.style.display = 'none';
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const authLink = document.getElementById('authLink');
+    const navAdmin = document.getElementById('navAdmin');
+
+    if (token) {
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        if (authLink) {
+            authLink.textContent = 'Выход';
+            authLink.href = '#';
+            authLink.onclick = logout;
         }
-        if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    }
-};
 
-async function register() {
-    const loginValue = document.getElementById('authLogin').value;
-    const password = document.getElementById('authPassword').value;
-    let role = (password === '123') ? 'ADMIN' : 'USER';
-
-    try {
-        await apiClient.post('/auth/register', { login: loginValue, password, role });
-        alert(`Регистрация успешна! Роль: ${role}`);
-    } catch (error) {
-        alert(error.response?.data?.message || "Ошибка регистрации");
+        try {
+            const decoded = jwt_decode(token); 
+            if (navAdmin) {
+                navAdmin.style.display = (decoded.role === 'ADMIN') ? 'inline-block' : 'none';
+            }
+        } catch (e) {
+            console.error("Ошибка декодирования токена", e);
+            if (navAdmin) navAdmin.style.display = 'none';
+        }
+    } else {
+        if (navAdmin) navAdmin.style.display = 'none';
+        if (authLink) {
+            authLink.textContent = 'Вход/Регистрация';
+            authLink.href = 'login.html';
+            authLink.onclick = null;
+        }
     }
 }
 
 async function login() {
     const loginValue = document.getElementById('authLogin').value;
     const password = document.getElementById('authPassword').value;
-    const main = document.getElementById('main-content');
-    const auth = document.getElementById('auth-form');
     try {
         const response = await apiClient.post('/auth/login', { login: loginValue, password });
-        const token = response.data.token;
-        
-        localStorage.setItem('token', token);
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        document.getElementById('authStatus').textContent = 'Статус: Авторизован';
-        document.getElementById('authStatus').style.color = 'green';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
-        main.style.display = 'block';
-        auth.style.display = 'none';
+        localStorage.setItem('token', response.data.token); 
+        alert('Успешный вход!');
+        window.location.href = 'index.html';
     } catch (error) {
-        alert('Ошибка входа: ' + (error.response?.data?.message || 'Неизвестная ошибка'));
+        alert('Ошибка входа: ' + (error.response?.data?.message || 'Неверные данные')); 
     }
 }
+async function register() {
+    const loginValue = document.getElementById('authLogin').value;
+    const password = document.getElementById('authPassword').value;
+    let role = (password === '123') ? 'ADMIN' : 'USER'; 
 
+    try {
+        await apiClient.post('/auth/register', { login: loginValue, password, role }); 
+        alert(`Регистрация успешна! Роль: ${role}`);
+    } catch (error) {
+        alert(error.response?.data?.message || "Ошибка регистрации"); 
+    }
+}
 function logout() {
     localStorage.removeItem('token');
     delete apiClient.defaults.headers.common['Authorization'];
     alert('Вы вышли из системы');
-    location.reload();
+    window.location.href = 'index.html';
+}
+
+const initialToken = localStorage.getItem('token');
+if (initialToken) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${initialToken}`;
+}
+async function renderCatalog() {
+    const grid = document.getElementById('catalog-grid');
+    if (!grid) return;
+    
+    try {
+        const res = await apiClient.get('/doors');
+        console.log("Данные получены:", res.data); 
+        const doorsArray = Array.isArray(res.data) ? res.data : (res.data?.doors || res.data?.rows || Object.values(res.data).find(Array.isArray) || []);
+        console.log(doorsArray);
+        if (doorsArray.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;">В базе данных пока нет товаров.</p>';
+            return;
+        }
+        grid.innerHTML = doorsArray.map(door => `
+            <div class="card">
+                <h3>${door.doorName || 'Без названия'}</h3>
+                <p>ID: ${door.id}</p>
+                <button class="btn-blue" onclick="addToCart(${door.id}, '${door.doorName}')">В корзину</button>
+            </div>
+        `).join('');
+
+    } catch (e) {
+        console.error("Ошибка отрисовки:", e);
+        grid.innerHTML = `<p>Ошибка загрузки: ${e.response?.status === 401 ? 'Нужна авторизация' : 'Сервер не отвечает'}</p>`;
+    }
+}
+
+function addToCart(id, name) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.push({ id, name });
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert('Товар добавлен в корзину!');
+}
+
+function renderCart() {
+    const container = document.getElementById('cart-items');
+    if (!container) return;
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    container.innerHTML = cart.length ? cart.map((item, index) => `
+        <div class="card">
+            <h3>${item.name}</h3>
+            <button onclick="removeFromCart(${index})" style="background:#e74c3c">Удалить</button>
+        </div>
+    `).join('') : '<p>Корзина пуста</p>';
+}
+
+function removeFromCart(index) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.splice(index, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    renderCart();
+}
+
+async function renderOrders() {
+    const list = document.getElementById('orders-list');
+    if (!list) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await apiClient.get('/orders');
+        console.log("Ответ сервера:", res.data);
+        const orders = res.data.data || []; 
+
+        if (orders.length === 0) {
+            list.innerHTML = '<p>У вас пока нет заказов.</p>';
+            return;
+        }
+
+        list.innerHTML = orders.map(order => `
+            <div class="card">
+                <h3>Заказ №${order.id}</h3>
+                <p>Статус: ${order.status || 'В обработке'}</p>
+                <button class="btn-red" onclick="deleteOrderRequest(${order.id})">Отменить</button>
+            </div>
+        `).join('');
+
+    } catch (e) {
+        console.error("Детали ошибки:", e.response?.data || e.message); 
+        list.innerHTML = `<p style="color:red;">Ошибка сервера (500): Проверьте консоль бэкенда.</p>`; 
+    }
+}
+
+async function deleteOrderRequest(orderId) {
+    if (!confirm("Вы действительно хотите отменить этот заказ?")) return;
+
+    try {
+        const res = await apiClient.delete(`/orders/${orderId}`);
+        
+        if (res.data.success) {
+            alert("Заказ успешно отменен");
+            renderOrders(); 
+        }
+    } catch (e) {
+        console.error("Ошибка удаления:", e);
+        alert("Не удалось отменить заказ: " + (e.response?.data?.message || "Ошибка доступа"));
+    }
 }
 
 async function displayAllDoors() {
+    if (!output) return;
     try {
-        const response = await apiClient.get('/doors');
+        const response = await apiClient.get('/doors'); 
         output.textContent = JSON.stringify(response.data, null, 2);
-        output.style.color = 'black';
     } catch (error) {
-        if (error.response?.status === 401) {
-            output.textContent = 'Ошибка: Пожалуйста, войдите в систему, чтобы увидеть данные.';
-            output.style.color = 'red';
-        } else {
-            output.textContent = 'Ошибка: ' + error.message;
-        }
+        output.textContent = 'Ошибка: ' + error.message;
     }
 }
-
-async function renderCatalog() {
-    const container = document.getElementById('catalog-container');
-    try{
-        const response = await apiClient.get('/doors');
-        const doors = response.data;
-        container.innerHTML = '';
-        doors.forEach(door => {
-            const card = document.createElement('div');
-            card.innerHTML = `
-            <h3>${door.doorName}</h3>
-            <p>ID: ${door.id}</p>
-            <button onclick="addToCart(${door.id})">Добавить в корзину</button>
-            `
-            container.appendChild(card)
-        });
-    } catch (error){
-        container.innerHTML = "Ошибка загрузки каталога"
-    }
-}
-
 async function createDoor() {
     const name = document.getElementById('itemName').value;
     try {
-        const response = await apiClient.post('/doors', { doorName: name });
+        const response = await apiClient.post('/doors', { doorName: name }); 
         output.textContent = 'Создано: ' + JSON.stringify(response.data, null, 2);
         displayAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
+        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка'); 
     }
 }
-
 async function updateDoor() {
-    const name = document.getElementById('itemName').value;
     const id = document.getElementById('itemId').value;
+    const name = document.getElementById('itemName').value;
     try {
-        const response = await apiClient.put(`/doors/${id}`, { doorName: name });
-        output.textContent = 'Обновлено: ' + JSON.stringify(response.data, null, 2);
+        await apiClient.put(`/doors/${id}`, { doorName: name });
+        output.textContent = 'Обновлено успешно';
         displayAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка');
+        output.textContent = 'Ошибка обновления';
     }
 }
-
 async function deleteDoor() {
     const id = document.getElementById('itemId').value;
     try {
-        await apiClient.delete(`/doors/${id}`);
+        await apiClient.delete(`/doors/${id}`); 
         output.textContent = 'Удалено успешно';
         displayAllDoors();
     } catch (error) {
-        if (error.response?.status === 403) {
-            output.textContent = 'Ошибка: Нужен ADMIN';
-        } else {
-            output.textContent = 'Ошибка при удалении';
-        }
+        output.textContent = 'Ошибка: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : 'Ошибка удаления');
     }
 }

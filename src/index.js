@@ -28,7 +28,7 @@ Door.hasMany(Storage, { foreignKey: 'productId' });
 Storage.belongsTo(Door, { foreignKey: 'productId' });
 
 app.use('/api/doors', doorRouter); 
-app.use('/orders', orderRouter);
+app.use('/api/orders', orderRouter);
 app.use('/customers', customerRouter);
 app.use('/variants', doorVarRouter);
 app.use('/storage', storageRouter);
