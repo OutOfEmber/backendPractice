@@ -47,7 +47,7 @@ async function checkInitDB() {
 async function start() {
     try {
         await checkInitDB();
-        await sequelize.sync({ force: false }); 
+        await sequelize.sync({ force: false , alter:false }); 
         console.log("База данных успешно синхронизирована");
         app.listen(3000, () => console.log('Сервер запущен на порте 3000'));
     } catch (e) {

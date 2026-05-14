@@ -9,10 +9,10 @@
     <nav id="navbar">
         <a href="index.html">Главная</a>
         <a href="catalog.html">Каталог</a>
-        <a href="login.html" id="authLink">Вход/Регистрация</a>
         <a href="orders.html">Мои заказы</a>
         <a href="cart.html">Корзина</a>
         <a href="admin.html" id="navAdmin" style="display:none;">Админ-панель</a>
+        <a href="login.html" id="authLink">Вход/Регистрация</a>
     </nav>
     <div class="container">
         <h1>Добро пожаловать в DoorStore</h1>
@@ -24,6 +24,6 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
     <script src="api.js"></script>
-    <script>window.onload = checkAuth;</script>
+    <script>window.onload = checkAuth();</script>
 </body>
 </html>

@@ -79,7 +79,7 @@ async function renderCatalog() {
     
     try {
         const res = await apiClient.get('/doors');
-        console.log("Данные получены:", res.data); 
+        console.log("Данные получены:", res.data.data); 
         const doorsArray = Array.isArray(res.data) ? res.data : (res.data?.doors || res.data?.rows || Object.values(res.data).find(Array.isArray) || []);
         console.log(doorsArray);
         if (doorsArray.length === 0) {
@@ -87,12 +87,13 @@ async function renderCatalog() {
             return;
         }
         grid.innerHTML = doorsArray.map(door => `
-            <div class="card">
-                <h3>${door.doorName || 'Без названия'}</h3>
-                <p>ID: ${door.id}</p>
-                <button class="btn-blue" onclick="addToCart(${door.id}, '${door.doorName}')">В корзину</button>
-            </div>
-        `).join('');
+    <div class="card">
+        <h3>${door.doorName || 'Без названия'}</h3>
+        <p>Цена: ${door.basePrice || 0} ₽</p> <button class="btn-blue" onclick="addToCart(${door.id}, '${door.doorName}', ${door.basePrice})">
+            В корзину
+        </button>
+    </div>
+`).join('');
 
     } catch (e) {
         console.error("Ошибка отрисовки:", e);
@@ -100,26 +101,48 @@ async function renderCatalog() {
     }
 }
 
-function addToCart(id, name) {
+function addToCart(id, name, price) {
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    cart.push({ id, name });
+    const existingItem = cart.find(item => item.id === id);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({ 
+            id, 
+            name, 
+            price: Number(price) || 0, 
+            quantity: 1 
+        });
+    }
+    
     localStorage.setItem('cart', JSON.stringify(cart));
-    alert('Товар добавлен в корзину!');
+    alert(`Товар "${name}" добавлен в корзину!`);
 }
-
 function renderCart() {
     const container = document.getElementById('cart-items');
     if (!container) return;
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    container.innerHTML = cart.length ? cart.map((item, index) => `
+    if (cart.length === 0) {
+        container.innerHTML = '<p>Корзина пуста</p>';
+        return;
+    }
+    const totalOrderPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let html = cart.map((item, index) => `
         <div class="card">
             <h3>${item.name}</h3>
+            <p>Цена: ${item.price} ₽ | Кол-во: ${item.quantity} шт.</p>
+            <p>Сумма: <strong>${item.price * item.quantity} ₽</strong></p>
             <button onclick="removeFromCart(${index})" style="background:#e74c3c">Удалить</button>
         </div>
-    `).join('') : '<p>Корзина пуста</p>';
-}
+    `).join('');
+    html += `
+        <div style="margin-top: 20px; padding: 15px; border-top: 2px solid #eee; text-align: right;">
+            <h3>Итого к оплате: <span style="color: #2c3e50;">${totalOrderPrice} ₽</span></h3>
+        </div>
+    `;
 
+    container.innerHTML = html;
+}
 function removeFromCart(index) {
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     cart.splice(index, 1);
@@ -127,18 +150,35 @@ function removeFromCart(index) {
     renderCart();
 }
 
+async function checkout() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (cart.length === 0) return alert("Корзина пуста!");
+    const totalSum = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    try {
+        const response = await apiClient.post('/orders', {
+            quantity: totalQty,
+            totalPrice: totalSum,
+            status: 'Новый'
+        });
+
+        if (response.data.success) {
+            alert(`Заказ на сумму ${totalSum} ₽ успешно оформлен!`);
+            localStorage.removeItem('cart');
+            window.location.href = 'orders.html';
+        }
+    } catch (error) {
+        alert("Ошибка: " + (error.response?.data?.message || "Сервер недоступен"));
+    }
+}
+
 async function renderOrders() {
     const list = document.getElementById('orders-list');
     if (!list) return;
 
     try {
-        const token = localStorage.getItem('token');
-        if (token) {
-            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        }
-
         const res = await apiClient.get('/orders');
-        console.log("Ответ сервера:", res.data);
         const orders = res.data.data || []; 
 
         if (orders.length === 0) {
@@ -149,14 +189,15 @@ async function renderOrders() {
         list.innerHTML = orders.map(order => `
             <div class="card">
                 <h3>Заказ №${order.id}</h3>
-                <p>Статус: ${order.status || 'В обработке'}</p>
-                <button class="btn-red" onclick="deleteOrderRequest(${order.id})">Отменить</button>
+                <p>Статус: <strong>${order.status || 'Новый'}</strong></p>
+                <p>Сумма заказа: <span style="font-weight: bold; color: #27ae60;">${order.totalPrice} ₽</span></p>
+                <p>Товаров: ${order.quantity} шт.</p>
+                <button class="btn-red" onclick="deleteOrderRequest(${order.id})">Отменить заказ</button>
             </div>
         `).join('');
-
     } catch (e) {
-        console.error("Детали ошибки:", e.response?.data || e.message); 
-        list.innerHTML = `<p style="color:red;">Ошибка сервера (500): Проверьте консоль бэкенда.</p>`; 
+        console.error("Ошибка отрисовки заказов:", e);
+        list.innerHTML = `<p style="color:red;">Не удалось загрузить историю.</p>`;
     }
 }
 
@@ -187,8 +228,9 @@ async function displayAllDoors() {
 }
 async function createDoor() {
     const name = document.getElementById('itemName').value;
+    const price = document.getElementById('basePrice').value;
     try {
-        const response = await apiClient.post('/doors', { doorName: name }); 
+        const response = await apiClient.post('/doors', { doorName: name , basePrice:price }); 
         output.textContent = 'Создано: ' + JSON.stringify(response.data, null, 2);
         displayAllDoors();
     } catch (error) {
@@ -198,8 +240,9 @@ async function createDoor() {
 async function updateDoor() {
     const id = document.getElementById('itemId').value;
     const name = document.getElementById('itemName').value;
+    const price = document.getElementById('basePrice').value;
     try {
-        await apiClient.put(`/doors/${id}`, { doorName: name });
+        await apiClient.put(`/doors/${id}`, { doorName: name , basePrice:price });
         output.textContent = 'Обновлено успешно';
         displayAllDoors();
     } catch (error) {
