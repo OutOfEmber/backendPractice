@@ -30,9 +30,9 @@ Storage.belongsTo(Door, { foreignKey: 'productId' });
 app.use('/api/doors', doorRouter); 
 app.use('/api/orders', orderRouter);
 app.use('/customers', customerRouter);
-app.use('/variants', doorVarRouter);
-app.use('/storage', storageRouter);
-app.use('/stores', storeRouter);
+app.use('/api/variants', doorVarRouter);
+app.use('/api/storage', storageRouter);
+app.use('/api/stores', storeRouter);
 app.use('/api/auth', authRouter);
 
 async function checkInitDB() {

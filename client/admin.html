@@ -10,20 +10,42 @@
         <a href="index.html">Главная</a>
         <a href="admin.html">Админка</a>
     </nav>
-    <div class="container">
-        <h1>Управление товарами</h1>
-        <div style="max-width: 500px; margin: 0 auto 30px auto;">
-            <input type="text" id="itemId" placeholder="ID (для удаления/обновления)">
-            <input type="text" id="itemName" placeholder="Название двери">
-            <input type="text" id="basePrice" placeholder="Цена">
-            <button class="btn-blue" onclick="createDoor()">Создать товар</button>
-            <button class="btn-blue" style="background: #f39c12;" onclick="updateDoor()">Обновить товар</button>
-            <button class="btn-red" onclick="deleteDoor()">Удалить товар</button>
+
+    <div class="container" style="max-width: 1200px;">
+        <h1>Панель администратора</h1>
+
+        <div class="admin-layout">
+            <div class="sidebar">
+                <button class="sidebar-btn active" onclick="switchTable('doors', this)"> Двери (Door)</button>
+                <button class="sidebar-btn" onclick="switchTable('door-variants', this)"> Варианты (DoorVariant)</button>
+                <button class="sidebar-btn" onclick="switchTable('orders', this)"> Заказы (Order)</button>
+                <button class="sidebar-btn" onclick="switchTable('storages', this)"> Склады (Storage)</button>
+                <button class="sidebar-btn" onclick="switchTable('stores', this)"> Магазины (Store)</button>
+            </div>
+
+            <div class="main-content">
+                <h2 id="currentTableTitle">Управление таблицей: Двери (Door)</h2>
+                
+                <div class="form-group">
+                    <input type="text" id="itemId" placeholder="ID (только для изменения или удаления)">
+                    <input type="text" id="itemName" placeholder="Название двери">
+                    <input type="text" id="basePrice" placeholder="Цена базовой модели">
+                    
+                    <div class="actions-row">
+                        <button class="btn-blue" onclick="createDoor()">Добавить запись</button>
+                        <button class="btn-blue" style="background: #f39c12;" onclick="updateDoor()">Изменить запись</button>
+                        <button class="btn-red" onclick="deleteDoor()">Удалить по ID</button>
+                    </div>
+                </div>
+
+                <h3>Содержимое в базе данных (JSON):</h3>
+                <div id="output" style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; text-align: left; max-height: 400px; overflow-y: auto;">
+                    Загрузка данных...
+                </div>
+            </div>
         </div>
-        <h3>Список в БД (JSON):</h3>
-        <div id="output">Нажмите "Обновить список" для просмотра...</div>
-        <button class="btn-blue" onclick="displayAllDoors()" style="margin-top: 10px;">Обновить список</button>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
     <script src="api.js"></script>
@@ -35,6 +57,7 @@
                 location.href = 'login.html';
             }
             checkAuth();
+            displayAllDoors();
         };
     </script>
 </body>
