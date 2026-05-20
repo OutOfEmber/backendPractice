@@ -3,6 +3,7 @@ const DoorVariant = require('../database/models/DoorVariant.js');
 exports.getAll = async (req, res) => {
   try {
     const data = await DoorVariant.findAll();
+         console.log('getAll', typeof(DoorVariant))
     res.json({ success: true, data, count: data.length });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
@@ -10,6 +11,7 @@ exports.getAll = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const item = await DoorVariant.findByPk(req.params.id);
+   
     if (!item) return res.status(404).json({ success: false, message: 'Вариант двери не найден' });
     res.json({ success: true, data: item });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
@@ -17,9 +19,14 @@ exports.getOne = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+    console.log(req.body)
+    console.log(typeof(DoorVariant))
     const newItem = await DoorVariant.create(req.body);
     res.status(201).json({ success: true, data: newItem });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({ success: false, error: e.message });
+  }
 };
 
 exports.update = async (req, res) => {

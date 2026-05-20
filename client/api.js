@@ -5,6 +5,7 @@ const apiClient = axios.create({
 });
 
 const output = document.getElementById('output');
+let activeTable = 'doors'; 
 
 function checkAuth() {
     const token = localStorage.getItem('token');
@@ -47,21 +48,22 @@ async function login() {
         alert('Успешный вход!');
         window.location.href = 'index.html';
     } catch (error) {
-        alert('Ошибка входа: ' + (error.response?.data?.message || 'Неверные данные')); 
+        alert('Ошибка входа: ' + (error.response?.data?.message || 'Неверные данные'));
     }
 }
+
 async function register() {
     const loginValue = document.getElementById('authLogin').value;
     const password = document.getElementById('authPassword').value;
-    let role = (password === '123') ? 'ADMIN' : 'USER'; 
-
+    let role = (password === '123') ? 'ADMIN' : 'USER';
     try {
-        await apiClient.post('/auth/register', { login: loginValue, password, role }); 
-        alert(`Регистрация успешна! Роль: ${role}`);
+        await apiClient.post('/auth/register', { login: loginValue, password, role });
+        alert(`Registration successful! Role: ${role}`);
     } catch (error) {
-        alert(error.response?.data?.message || "Ошибка регистрации"); 
+        alert(error.response?.data?.message || "Ошибка регистрации");
     }
 }
+
 function logout() {
     localStorage.removeItem('token');
     delete apiClient.defaults.headers.common['Authorization'];
@@ -73,13 +75,14 @@ const initialToken = localStorage.getItem('token');
 if (initialToken) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${initialToken}`;
 }
+
+
 async function renderCatalog() {
     const grid = document.getElementById('catalog-grid');
     if (!grid) return;
-    
     try {
         const res = await apiClient.get('/doors');
-        console.log("Данные получены:", res.data.data); 
+        console.log("Данные получены:", res.data.data);
         const doorsArray = Array.isArray(res.data) ? res.data : (res.data?.doors || res.data?.rows || Object.values(res.data).find(Array.isArray) || []);
         console.log(doorsArray);
         if (doorsArray.length === 0) {
@@ -87,14 +90,14 @@ async function renderCatalog() {
             return;
         }
         grid.innerHTML = doorsArray.map(door => `
-    <div class="card">
-        <h3>${door.doorName || 'Без названия'}</h3>
-        <p>Цена: ${door.basePrice || 0} ₽</p> <button class="btn-blue" onclick="addToCart(${door.id}, '${door.doorName}', ${door.basePrice})">
-            В корзину
-        </button>
-    </div>
-`).join('');
-
+            <div class="card">
+                <h3>${door.doorName || 'Без названия'}</h3>
+                <p>Цена: ${door.basePrice || 0} ₽</p> 
+                <button class="btn-blue" onclick="addToCart(${door.id}, '${door.doorName}', ${door.basePrice})">
+                    В корзину
+                </button>
+            </div>
+        `).join('');
     } catch (e) {
         console.error("Ошибка отрисовки:", e);
         grid.innerHTML = `<p>Ошибка загрузки: ${e.response?.status === 401 ? 'Нужна авторизация' : 'Сервер не отвечает'}</p>`;
@@ -118,6 +121,7 @@ function addToCart(id, name, price) {
     localStorage.setItem('cart', JSON.stringify(cart));
     alert(`Товар "${name}" добавлен в корзину!`);
 }
+
 function renderCart() {
     const container = document.getElementById('cart-items');
     if (!container) return;
@@ -132,7 +136,7 @@ function renderCart() {
             <h3>${item.name}</h3>
             <p>Цена: ${item.price} ₽ | Кол-во: ${item.quantity} шт.</p>
             <p>Сумма: <strong>${item.price * item.quantity} ₽</strong></p>
-            <button onclick="removeFromCart(${index})" style="background:#e74c3c">Удалить</button>
+            <button onclick="removeFromCart(${index})" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Удалить</button>
         </div>
     `).join('');
     html += `
@@ -140,9 +144,9 @@ function renderCart() {
             <h3>Итого к оплате: <span style="color: #2c3e50;">${totalOrderPrice} ₽</span></h3>
         </div>
     `;
-
     container.innerHTML = html;
 }
+
 function removeFromCart(index) {
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     cart.splice(index, 1);
@@ -155,14 +159,12 @@ async function checkout() {
     if (cart.length === 0) return alert("Корзина пуста!");
     const totalSum = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
-
     try {
         const response = await apiClient.post('/orders', {
             quantity: totalQty,
             totalPrice: totalSum,
             status: 'Новый'
         });
-
         if (response.data.success) {
             alert(`Заказ на сумму ${totalSum} ₽ успешно оформлен!`);
             localStorage.removeItem('cart');
@@ -176,11 +178,9 @@ async function checkout() {
 async function renderOrders() {
     const list = document.getElementById('orders-list');
     if (!list) return;
-
     try {
         const res = await apiClient.get('/orders');
-        const orders = res.data.data || []; 
-
+        const orders = res.data.data || [];
         if (orders.length === 0) {
             list.innerHTML = '<p>У вас пока нет заказов.</p>';
             return;
@@ -203,13 +203,11 @@ async function renderOrders() {
 
 async function deleteOrderRequest(orderId) {
     if (!confirm("Вы действительно хотите отменить этот заказ?")) return;
-
     try {
         const res = await apiClient.delete(`/orders/${orderId}`);
-        
         if (res.data.success) {
             alert("Заказ успешно отменен");
-            renderOrders(); 
+            renderOrders();
         }
     } catch (e) {
         console.error("Ошибка удаления:", e);
@@ -217,52 +215,42 @@ async function deleteOrderRequest(orderId) {
     }
 }
 
-function getCurrentEndpoint() {
-    const tableSelect = document.getElementById('tableSelect');
-    return tableSelect ? tableSelect.value : 'doors';
-}
 
-let activeTable = 'doors';
 
 function switchTable(targetTable, element) {
     activeTable = targetTable;
     
     document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
+    if (element) element.classList.add('active');
     
     const title = document.getElementById('currentTableTitle');
     const nameInput = document.getElementById('itemName');
     const extraInput = document.getElementById('basePrice');
     
     document.getElementById('itemId').value = '';
-    nameInput.value = '';
-    extraInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (extraInput) extraInput.value = '';
 
     if (targetTable === 'doors') {
         title.textContent = 'Управление таблицей: Двери (Door)';
-        nameInput.placeholder = 'Название двери';
-        extraInput.placeholder = 'Цена базовой модели';
-        extraInput.style.display = 'block';
-    } else if (targetTable === 'door-variants') {
+        nameInput.placeholder = 'Название двери (doorName)';
+        extraInput.placeholder = 'Цена базовой модели (basePrice)';
+    } else if (targetTable === 'variants') { 
         title.textContent = 'Управление таблицей: Варианты дверей (DoorVariant)';
-        nameInput.placeholder = 'Название модификации / Варианта';
-        extraInput.placeholder = 'Цена этого варианта';
-        extraInput.style.display = 'block';
+        nameInput.placeholder = 'Цвет модификации (color)';
+        extraInput.placeholder = 'Наценка за этот вариант (extraCharge)';
     } else if (targetTable === 'orders') {
         title.textContent = 'Управление таблицей: Заказы (Order)';
-        nameInput.placeholder = 'Статус заказа (Новый / В обработке / Доставлен)';
+        nameInput.placeholder = 'Статус заказа (status)';
         extraInput.placeholder = 'Итоговая стоимость (totalPrice)';
-        extraInput.style.display = 'block';
-    } else if (targetTable === 'storages') {
+    } else if (targetTable === 'storage') { 
         title.textContent = 'Управление таблицей: Склады (Storage)';
-        nameInput.placeholder = 'Наименование склада';
-        extraInput.placeholder = 'Физический адрес склада';
-        extraInput.style.display = 'block';
+        nameInput.placeholder = 'Наименование склада (name)';
+        extraInput.placeholder = 'Физический адрес склада (address)';
     } else if (targetTable === 'stores') {
         title.textContent = 'Управление таблицей: Магазины (Store)';
-        nameInput.placeholder = 'Название филиала / Магазина';
-        extraInput.placeholder = 'Адрес магазина';
-        extraInput.style.display = 'block';
+        nameInput.placeholder = 'Название филиала (name)';
+        extraInput.placeholder = 'Адрес магазина (address)';
     }
 
     displayAllDoors();
@@ -272,11 +260,28 @@ async function displayAllDoors() {
     if (!output) return;
     try {
         const response = await apiClient.get(`/${activeTable}`);
-        output.textContent = JSON.stringify(response.data, null, 2);
-        console.log(`Данные были успешно прочитаны из таблицы: ${activeTable}`);
+        const resultData = response.data.data !== undefined ? response.data.data : response.data;
+        output.textContent = JSON.stringify(resultData, null, 2);
     } catch (error) {
-        output.textContent = 'Ошибка загрузки данных: ' + error.message;
-        console.error(`Ошибка при чтении данных из таблицы: ${activeTable}`, error.message);
+        output.textContent = 'Ошибка загрузки данных из БД: ' + (error.response?.data?.error || error.message);
+    }
+}
+
+async function getOneDoor() {
+    const id = document.getElementById('itemId').value;
+    if (!id) return alert("Введите ID записи для поиска!");
+    if (!output) return;
+
+    try {
+        const response = await apiClient.get(`/${activeTable}/${id}`);
+        const resultData = response.data.data !== undefined ? response.data.data : response.data;
+        output.textContent = `[Данные по ID ${id} в таблице ${activeTable}]:\n` + JSON.stringify(resultData, null, 2);
+    } catch (error) {
+        if (error.response?.status === 404) {
+            output.textContent = `Запись с ID ${id} в таблице "${activeTable}" отсутствует в БД.`;
+        } else {
+            output.textContent = 'Ошибка получения записи: ' + (error.response?.data?.error || error.message);
+        }
     }
 }
 
@@ -284,26 +289,32 @@ async function createDoor() {
     const name = document.getElementById('itemName').value;
     const extra = document.getElementById('basePrice').value;
 
+    if (!name) return alert("Заполните основное поле ввода!");
+
     let payload = {};
+    
     if (activeTable === 'doors') {
         payload = { doorName: name, basePrice: Number(extra) || 0 };
+    } else if (activeTable === 'variants') {
+        payload = { 
+            doorId: 1, 
+            size: "200x80", 
+            color: name, 
+            openingSide: "Универсальная", 
+            extraCharge: Number(extra) || 0 
+        };
     } else if (activeTable === 'orders') {
         payload = { status: name || 'Новый', totalPrice: Number(extra) || 0, quantity: 1 };
-    } else if (activeTable === 'door-variants') {
-        payload = { variantName: name, price: Number(extra) || 0 };
-    } else {
+    } else if (activeTable === 'storage' || activeTable === 'stores') {
         payload = { name: name, address: extra || 'Не указан' };
     }
 
     try {
         const response = await apiClient.post(`/${activeTable}`, payload);
-        output.textContent = 'Успешно создано: ' + JSON.stringify(response.data, null, 2);
-        
-        console.log(`Запись была успешно добавлена в таблицу: ${activeTable}`);
+        alert('Запись добавлена успешно!');
         displayAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка создания: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : error.message);
-        console.error(`Не удалось добавить запись в таблицу: ${activeTable}`, error.message);
+        alert('Ошибка добавления: ' + (error.response?.data?.error || error.message));
     }
 }
 
@@ -312,44 +323,39 @@ async function updateDoor() {
     const name = document.getElementById('itemName').value;
     const extra = document.getElementById('basePrice').value;
 
-    if (!id) return alert("Введите ID записи для обновления!");
+    if (!id) return alert("Введите ID записи для изменения!");
 
     let payload = {};
     if (activeTable === 'doors') {
         payload = { doorName: name, basePrice: Number(extra) || 0 };
+    } else if (activeTable === 'variants') {
+        payload = { color: name, extraCharge: Number(extra) || 0 };
     } else if (activeTable === 'orders') {
         payload = { status: name, totalPrice: Number(extra) || 0 };
-    } else if (activeTable === 'door-variants') {
-        payload = { variantName: name, price: Number(extra) || 0 };
-    } else {
+    } else if (activeTable === 'storage' || activeTable === 'stores') {
         payload = { name: name, address: extra };
     }
 
     try {
         await apiClient.put(`/${activeTable}/${id}`, payload);
-        output.textContent = `Запись с ID ${id} в таблице "${activeTable}" успешно обновлена`;
-        
-        console.log(`Запись с ID ${id} была успешно обновлена в таблице: ${activeTable}`);
+        alert(`Запись с ID ${id} обновлена!`);
         displayAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка обновления: ' + error.message;
-        console.error(`Не удалось обновить запись с ID ${id} в таблице: ${activeTable}`, error.message);
+        alert('Ошибка изменения: ' + (error.response?.data?.error || error.message));
     }
 }
 
 async function deleteDoor() {
     const id = document.getElementById('itemId').value;
     if (!id) return alert("Введите ID записи для удаления!");
-    if (!confirm(`Вы уверены, что хотите удалить запись с ID ${id} из таблицы "${activeTable}"?`)) return;
+    if (!confirm(`Удалить запись с ID ${id} из текущей таблицы?`)) return;
 
     try {
         await apiClient.delete(`/${activeTable}/${id}`);
-        output.textContent = `Запись с ID ${id} успешно удалена из таблицы "${activeTable}"`;
-        
-        console.log(`Запись с ID ${id} была успешно удалена из таблицы: ${activeTable}`);
+        alert(`Запись с ID ${id} успешно удалена`);
+        document.getElementById('itemId').value = '';
         displayAllDoors();
     } catch (error) {
-        output.textContent = 'Ошибка удаления: ' + (error.response?.status === 403 ? 'Нужен ADMIN' : error.message);
-        console.error(`Не удалось удалить запись с ID ${id} из таблицы: ${activeTable}`, error.message);
+        alert('Ошибка удаления: ' + (error.response?.status === 403 ? 'Нужны права ADMIN' : error.message));
     }
 }

@@ -2,47 +2,45 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Админ-панель</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Панель администратора (Курсовая работа)</title>
+     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <nav>
-        <a href="index.html">Главная</a>
+        <a href="index.html">← На главную</a>
         <a href="admin.html">Админка</a>
+        <a href="#" id="authLink" style="margin-left: auto;">Вход</a>
     </nav>
 
-    <div class="container" style="max-width: 1200px;">
-        <h1>Панель администратора</h1>
+    <div class="container admin-layout">
+        <div class="sidebar">
+            <button class="sidebar-btn active" onclick="switchTable('doors', this)">🚪 Двери (Door)</button>
+            <button class="sidebar-btn" onclick="switchTable('variants', this)">🛠 Варианты (DoorVariant)</button>
+            <button class="sidebar-btn" onclick="switchTable('orders', this)">📦 Заказы (Order)</button>
+            <button class="sidebar-btn" onclick="switchTable('storage', this)">🏢 Склады (Storage)</button>
+            <button class="sidebar-btn" onclick="switchTable('stores', this)">🏪 Магазины (Store)</button>
+        </div>
 
-        <div class="admin-layout">
-            <div class="sidebar">
-                <button class="sidebar-btn active" onclick="switchTable('doors', this)"> Двери (Door)</button>
-                <button class="sidebar-btn" onclick="switchTable('door-variants', this)"> Варианты (DoorVariant)</button>
-                <button class="sidebar-btn" onclick="switchTable('orders', this)"> Заказы (Order)</button>
-                <button class="sidebar-btn" onclick="switchTable('storages', this)"> Склады (Storage)</button>
-                <button class="sidebar-btn" onclick="switchTable('stores', this)"> Магазины (Store)</button>
-            </div>
-
-            <div class="main-content">
-                <h2 id="currentTableTitle">Управление таблицей: Двери (Door)</h2>
-                
+        <div class="main-content">
+            <h2 id="currentTableTitle">Управление таблицей: Двери (Door)</h2>
+            
+            <div class="form-container">
                 <div class="form-group">
-                    <input type="text" id="itemId" placeholder="ID (только для изменения или удаления)">
-                    <input type="text" id="itemName" placeholder="Название двери">
-                    <input type="text" id="basePrice" placeholder="Цена базовой модели">
-                    
-                    <div class="actions-row">
-                        <button class="btn-blue" onclick="createDoor()">Добавить запись</button>
-                        <button class="btn-blue" style="background: #f39c12;" onclick="updateDoor()">Изменить запись</button>
-                        <button class="btn-red" onclick="deleteDoor()">Удалить по ID</button>
-                    </div>
+                    <input type="text" id="itemId" placeholder="ID записи (Обязательно для ИЗМЕНЕНИЯ, УДАЛЕНИЯ или ПОИСКА ПО ID)">
+                    <input type="text" id="itemName" placeholder="Название двери (doorName)">
+                    <input type="text" id="basePrice" placeholder="Цена базовой модели (basePrice)">
                 </div>
-
-                <h3>Содержимое в базе данных (JSON):</h3>
-                <div id="output" style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; text-align: left; max-height: 400px; overflow-y: auto;">
-                    Загрузка данных...
+                
+                <div class="actions-row">
+                    <button class="action-btn btn-post" onclick="createDoor()">Создать (POST)</button>
+                    <button class="action-btn btn-put" onclick="updateDoor()">Изменить (PUT)</button>
+                    <button class="action-btn btn-get-id" onclick="getOneDoor()">Вывести по ID (GET)</button>
+                    <button class="action-btn btn-delete" onclick="deleteDoor()">Удалить (DELETE)</button>
                 </div>
             </div>
+
+            <h3>Вывод содержимого БД (JSON-логи):</h3>
+            <div id="output">Синхронизация с сервером...</div>
         </div>
     </div>
 
@@ -53,11 +51,12 @@
         window.onload = () => {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert("Доступ только для авторизованных!");
+                alert("Доступ запрещен! Пожалуйста, авторизуйтесь.");
                 location.href = 'login.html';
+                return;
             }
             checkAuth();
-            displayAllDoors();
+            switchTable('doors', document.querySelector('.sidebar-btn.active'));
         };
     </script>
 </body>

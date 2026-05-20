@@ -1,6 +1,6 @@
 const express = require('express');
 const sequelize = require('./database/dbserver.js'); 
-const cors=require('cors')
+const cors = require('cors');
 
 const Door = require('./database/models/Door.js');
 const DoorVariant = require('./database/models/DoorVariant.js');
@@ -18,7 +18,7 @@ const doorRouter = require('./routes/doorRouter.js');
 const authRouter = require('./routes/authRouter.js');
 
 const app = express();
-app.use(cors())
+app.use(cors());
 app.use(express.json());
 
 Door.hasMany(DoorVariant, { foreignKey: 'doorId' });
@@ -44,15 +44,17 @@ async function checkInitDB() {
         process.exit(1);
     }
 }
+
 async function start() {
     try {
         await checkInitDB();
-        await sequelize.sync({ force: false , alter:false }); 
-        console.log("База данных успешно синхронизирована");
+        await sequelize.sync({ force: false, alter: false });
+        
+        console.log("База данных успешно синхронизирована (с примененными изменениями)");
         app.listen(3000, () => console.log('Сервер запущен на порте 3000'));
     } catch (e) {
         console.error("Ошибка запуска:", e);
     }
 }
 
-start(); 
+start();

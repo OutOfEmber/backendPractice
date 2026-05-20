@@ -8,13 +8,20 @@ exports.getAll = async (req, res) => {
                 message: "Пользователь не найден в запросе. Проверьте Middleware." 
             });
         }
-
-        const data = await Order.findAll({ where: { userId: req.user.id } });
+        
+        let data;
+        if (req.user.role === 'ADMIN') {
+            data = await Order.findAll();
+        } else {
+            data = await Order.findAll({ where: { userId: req.user.id } });
+        }
+        
         res.json({ success: true, data });
     } catch (e) { 
         res.status(500).json({ success: false, error: e.message }); 
     }
 };
+
 exports.getOne = async (req, res) => {
     try {
         const data = await Order.findOne({ 
