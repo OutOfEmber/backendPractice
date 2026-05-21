@@ -238,7 +238,7 @@ function switchTable(targetTable, element) {
     } else if (targetTable === 'variants') { 
         title.textContent = 'Управление таблицей: Варианты дверей (DoorVariant)';
         nameInput.placeholder = 'Цвет модификации (color)';
-        extraInput.placeholder = 'Наценка за этот вариант (extraCharge)';
+        extraInput.placeholder = 'ID двери';
     } else if (targetTable === 'orders') {
         title.textContent = 'Управление таблицей: Заказы (Order)';
         nameInput.placeholder = 'Статус заказа (status)';
@@ -246,11 +246,11 @@ function switchTable(targetTable, element) {
     } else if (targetTable === 'storage') { 
         title.textContent = 'Управление таблицей: Склады (Storage)';
         nameInput.placeholder = 'Наименование склада (name)';
-        extraInput.placeholder = 'Физический адрес склада (address)';
+        extraInput.placeholder = 'ID двери'
     } else if (targetTable === 'stores') {
         title.textContent = 'Управление таблицей: Магазины (Store)';
         nameInput.placeholder = 'Название филиала (name)';
-        extraInput.placeholder = 'Адрес магазина (address)';
+        extraInput.style='display:none';
     }
 
     displayAllDoors();
@@ -297,16 +297,16 @@ async function createDoor() {
         payload = { doorName: name, basePrice: Number(extra) || 0 };
     } else if (activeTable === 'variants') {
         payload = { 
-            doorId: 1, 
+            doorId: Number(extra) || 1 , 
             size: "200x80", 
             color: name, 
             openingSide: "Универсальная", 
-            extraCharge: Number(extra) || 0 
+            extraCharge: 1000 
         };
     } else if (activeTable === 'orders') {
         payload = { status: name || 'Новый', totalPrice: Number(extra) || 0, quantity: 1 };
     } else if (activeTable === 'storage' || activeTable === 'stores') {
-        payload = { name: name, address: extra || 'Не указан' };
+        payload = { name: name, productId: Number(extra) || 1 };
     }
 
     try {
@@ -329,11 +329,11 @@ async function updateDoor() {
     if (activeTable === 'doors') {
         payload = { doorName: name, basePrice: Number(extra) || 0 };
     } else if (activeTable === 'variants') {
-        payload = { color: name, extraCharge: Number(extra) || 0 };
+        payload = { color: name, doorId: Number(extra) || 0 };
     } else if (activeTable === 'orders') {
         payload = { status: name, totalPrice: Number(extra) || 0 };
     } else if (activeTable === 'storage' || activeTable === 'stores') {
-        payload = { name: name, address: extra };
+        payload = { name: name, productId: Number(extra) };
     }
 
     try {
