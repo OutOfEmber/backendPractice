@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подсказки для серверного приложения Node.js</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #e2e2e2;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            color: rgb(0, 0, 0);
+            margin-bottom: 30px;
+            padding: 20px;
+
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22d3ee);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: rgb(3, 3, 3);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 25px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+
+        .card-header:hover {
+            background: #f8f9fa;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background:  #0e55f0;
+            color: white;
+            border-radius: 50%;
+
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 0.95rem;
+        }
+
+        .card-header h2 {
+            flex: 1;
+            font-size: 1.15rem;
+            color: #2d3748;
+
+        }
+
+        .toggle-icon {
+            font-size: 1rem;
+            color: #a0aec0;
+            transition: transform 0.3s ease;
+        }
+
+        .card.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            padding: 0 25px;
+        }
+
+        .card.open .card-content {
+            max-height: 3000px;
+            padding: 0 25px 25px;
+        }
+
+        .description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 0.98rem;
+        }
+
+        .description code {
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.88em;
+            color: #e53e3e;
+        }
+
+        .hint {
+            margin-top: 15px;
+        }
+
+        .hint-btn {
+            background: #f0b145;
+            color: rgb(2, 2, 2);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+
+        }
+        .hint-btn.revealed {
+            background: #059669;
+        }
+
+        .hint-content {
+            margin-top: 15px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .hint-content.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        pre {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 18px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            border-left: 4px solid #0e55f0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        .hint-note {
+            margin-top: 10px;
+            color: #718096;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .hint-note code {
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #e53e3e;
+            font-style: normal;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .card-header h2 {
+                font-size: 1rem;
+            }
+
+            .step-number {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+
+            pre {
+                font-size: 0.8rem;
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Авторизации/Регистрации</h1>
+        <p class="subtitle">Node.js + Express + Sequelize + PostgreSQL + JWT</p>
+        <!-- <button id="expandAllBtn" class="btn-secondary">Развернуть все</button> -->
+        <!-- <button id="collapseAllBtn" class="btn-secondary">Сверн уть все</button> -->
+    </header>
+
+    <main class="container">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <p class="progress-text" id="progressText">Изучено: 0 из 0</p>
+
+        <!-- Шаг 1 -->
+        <div class="card" data-step="1">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">1</span>
+                <h2>Инициализация проекта</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Для начала работы необходимо инициализировать пакетный менеджер npm.
+                    Это создаст файл <code>package.json</code>, который будет хранить информацию о проекте и его
+                    зависимостях.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать команду
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>npm init -y</code></pre>
+                        <p class="hint-note">Флаг <code>-y</code> автоматически принимает все настройки по умолчанию.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 2 -->
+        <div class="card" data-step="2">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">2</span>
+                <h2>Установка основных зависимостей</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Установите основные пакеты для работы сервера: Express (веб-фреймворк),
+                    Sequelize (ORM), драйверы для PostgreSQL, JWT для аутентификации,
+                    CORS для кросс-доменных запросов и bcrypt для хеширования паролей.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать команду установки
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>npm install express sequelize pg pg-hstore jsonwebtoken cors bcrypt</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 3 -->
+        <div class="card" data-step="3">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">3</span>
+                <h2>Установка dev-зависимостей</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Для удобства разработки установите nodemon — утилиту, которая автоматически
+                    перезапускает сервер при изменении файлов. Она устанавливается как dev-зависимость.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать команду
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>npm install --save-dev nodemon</code></pre>
+                        <p class="hint-note">Флаг <code>--save-dev</code> добавляет пакет в devDependencies.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 4 -->
+        <div class="card" data-step="4">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">4</span>
+                <h2>Настройка package.json</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Добавьте скрипты для запуска сервера. Скрипт <code>dev</code> будет запускать
+                    сервер с nodemon для разработки, а <code>start</code> — для продакшена.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать конфигурацию
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>{
+  "name": "server-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sequelize": "^6.32.1",
+    "pg": "^8.11.0",
+    "pg-hstore": "^2.3.4",
+    "jsonwebtoken": "^9.0.0",
+    "cors": "^2.8.5",
+    "bcrypt": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 5 -->
+        <div class="card" data-step="5">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">5</span>
+                <h2>Структура проекта</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Создайте правильную структуру папок для организации кода.
+                    Это поможет поддерживать чистоту и масштабируемость проекта.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать структуру
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>project/
+├── config/
+│   └── database.js
+├── controllers/
+│   └── authController.js
+├── middleware/
+│   └── auth.js
+├── models/
+│   └── models.js
+├── routes/
+│   ├── index.js
+│   └── authRoutes.js
+├── .env
+├── .gitignore
+├── index.js
+└── package.json</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 6 -->
+        <div class="card" data-step="6">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">6</span>
+                <h2>Настройка переменных окружения</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Создайте файл <code>.env</code> для хранения конфиденциальных данных
+                    (пароли, ключи, порты). Не забудьте добавить его в <code>.gitignore</code>.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать .env
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>PORT=3000
+DB_NAME=НАЗВАНИЕ ВАШЕЙ БАЗЫ ДАННЫХ
+DB_USER=postgres
+DB_PASSWORD=ВАШ ПАРОЛЬ ОТ ПГШКИ
+JWT_SECRET=your_super_secret_key</code></pre>
+                        <p class="hint-note">Также добавьте <code>.env</code> в файл <code>.gitignore</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 7 -->
+        <div class="card" data-step="7">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">7</span>
+                <h2>Конфигурация базы данных</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Настройте подключение к PostgreSQL через Sequelize в файле <code>config/database.js</code>.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const { Sequelize } = require('sequelize');
+require('dotenv').config();
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    dialect: 'postgres'
+  }
+);
+
+module.exports = sequelize;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 8 -->
+        <div class="card" data-step="8">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">8</span>
+                <h2>Создание модели User</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Создайте модель пользователя с хешированием пароля через bcrypt.
+                    Хук <code>beforeCreate</code> автоматически хеширует пароль перед сохранением.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: { isEmail: true }
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  role: {
+    type:DataTypes.ENUM('ADMIN', 'USER'), 
+    defaultValue: 'USER'
+  }
+});
+
+module.exports = User;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 9 -->
+        <div class="card" data-step="9">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">9</span>
+                <h2>JWT middleware</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Создайте middleware для проверки JWT-токена. Оно будет защищать приватные маршруты,
+                    проверяя наличие и валидность токена в заголовке <code>Authorization</code>.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Токен не предоставлен' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Невалидный токен' });
+  }
+};</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 10 -->
+        <div class="card" data-step="10">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">10</span>
+                <h2>Контроллер аутентификации</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Создайте контроллер с методами регистрации и логина.
+                    При логине генерируется JWT-токен, который клиент использует для последующих запросов.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+  );
+};
+
+exports.register = async (req, res) => {
+  try {
+    const { email, password, username, role } = req.body;
+    
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Пользователь уже существует' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 5)
+    const user = await User.create({ email, password: hashedPassword, username, role });
+    const token = generateToken(user);
+
+    res.status(201).json({
+      message: 'Регистрация успешна',
+      token,
+      user: { id: user.id, email: user.email, username: user.username, role: user.role }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ message: 'Неверные данные' });
+    }
+
+    const isMatch = await bcrypt.compareSync(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Неверные данные' });
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'Вход выполнен',
+      token,
+      user: { id: user.id, email: user.email, username: user.username, role: user.role }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 11 -->
+        <div class="card" data-step="11">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">11</span>
+                <h2>Маршруты аутентификации</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Определите маршруты для регистрации, логина и получения профиля.
+                    Профиль защищён JWT middleware.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+const authMiddleware = require('../middleware/auth');
+
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.get('/profile', authMiddleware, authController.getProfile);
+
+module.exports = router;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 12 -->
+        <div class="card" data-step="12">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">12</span>
+                <h2>Главный файл index.js</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Соберите всё вместе в главном файле: настройте Express, CORS,
+                    JSON-парсер, маршруты и подключение к базе данных.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать код
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code>const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const sequelize = require('./config/database');
+const authRoutes = require('./routes/authRoutes');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api/auth', authRoutes);
+
+app.get('/', (req, res) => {
+  res.json({ message: 'API работает!' });
+});
+
+// Запуск сервера
+const start = async () => {
+  try {
+    await sequelize.authenticate();    
+    await sequelize.sync({ alter: true });
+    app.listen(PORT, () => {
+      console.log(`Сервер запущен на порту ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Ошибка запуска:', error);
+  }
+};
+
+start();</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 13 -->
+        <div class="card" data-step="13">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">13</span>
+                <h2>Запуск приложения</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Убедитесь, что PostgreSQL запущен и база данных создана.
+                    Затем запустите сервер в режиме разработки.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать команду
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code># Режим разработки (с nodemon)
+npm run dev
+</code></pre>
+                        <p class="hint-note">Если БД ещё не создана: <code>createdb your_database</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 14 -->
+        <div class="card" data-step="14">
+            <div class="card-header" onclick="toggleCard(this)">
+                <span class="step-number">14</span>
+                <h2>Тестирование API</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p class="description">
+                    Проверьте работу API через curl или Postman.
+                    Сначала зарегистрируйтесь, затем используйте полученный токен для защищённых запросов.
+                </p>
+                <div class="hint">
+                    <button class="hint-btn" onclick="revealHint(this)">
+                        Показать примеры запросов
+                    </button>
+                    <div class="hint-content hidden">
+                        <pre><code># Регистрация
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456","username":"test"}'
+
+# Логин
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456"}'
+
+# Защищённый маршрут (подставьте свой токен)
+curl http://localhost:3000/api/auth/profile \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+
+        let totalHints = 0;
+        let revealedHints = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            totalHints = document.querySelectorAll('.hint-btn').length;
+            updateProgress();
+
+            const firstCard = document.querySelector('.card');
+            if (firstCard) {
+                firstCard.classList.add('open');
+            }
+        });
+
+        function toggleCard(header) {
+            const card = header.parentElement;
+            card.classList.toggle('open');
+        }
+
+        function revealHint(btn) {
+            const hintContent = btn.nextElementSibling;
+
+            if (hintContent.classList.contains('hidden')) {
+                hintContent.classList.remove('hidden');
+                btn.textContent = '✅ Скрыть';
+                btn.classList.add('revealed');
+                revealedHints++;
+                updateProgress();
+            } else {
+                hintContent.classList.add('hidden');
+                btn.textContent = '💡 Показать';
+                btn.classList.remove('revealed');
+                revealedHints--;
+                updateProgress();
+            }
+        }
+
+        function updateProgress() {
+            const progress = document.getElementById('progress');
+            const progressText = document.getElementById('progressText');
+
+            const percentage = totalHints > 0
+                ? (revealedHints / totalHints) * 100
+                : 0;
+
+            progress.style.width = percentage + '%';
+            progressText.textContent = `Изучено: ${revealedHints} из ${totalHints} подсказок`;
+        }
+
+        document.getElementById('expandAllBtn').addEventListener('click', () => {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.add('open');
+            });
+        });
+
+        document.getElementById('collapseAllBtn').addEventListener('click', () => {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+
+</html>
